@@ -17,3 +17,5 @@ registerRoutes.route('/')
     }
      return console.log(userData);
   })
+
+  module.exports = registerRoutes;

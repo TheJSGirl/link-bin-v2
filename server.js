@@ -4,7 +4,7 @@ const path            = require('path');
 const { PORT = 5050 } = process.env;
 const morgan          = require('morgan');
 const cors            = require('cors');
-const v1Routes        = require('../routes/v1');
+const v1Routes        = require('./routes/v1');
 
 //app initiate
 const app = express();  
