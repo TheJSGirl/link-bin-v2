@@ -8,4 +8,4 @@ if(!poolConfig){
 
 const pool = mysql.createPool(poolConfig);
 
-export default pool;
+module.export = pool;

@@ -1,7 +1,7 @@
 const mainRoute = require('express').Router();
 
-const regesterRoutes = require('./regesterRoutes');
+const regesterRoutes = require('./registerRoutes');
 
-mainRoute.use('/register', regesterRoutes);
+mainRoute.use('/register', registerRoutes);
 
 module.exports = mainRoute;

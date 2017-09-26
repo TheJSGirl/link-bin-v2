@@ -10,7 +10,7 @@ if(env === 'development'){
     host            : 'localhost',
     user            : 'root',
     password        : 'pinku',
-    database        : 'register_login'
+    database        : 'registerLogin'
   }
 }
 
@@ -20,8 +20,8 @@ else if(env === 'test'){
     host            : 'localhost',
     user            : 'root',
     password        : 'pinku',
-    database        : 'register_login_test'
+    database        : 'registerLogin_test'
   }
 }
 
-export default poolConfig;
+module.exports= poolConfig;
