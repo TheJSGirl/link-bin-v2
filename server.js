@@ -1,7 +1,7 @@
 const express         = require('express');
 const bodyParser      = require('body-parser');
 const path            = require('path');
-const { PORT = 5050 } = process.env;
+const { PORT = 4040 } = process.env;
 const morgan          = require('morgan');
 const cors            = require('cors');
 const v1Routes        = require('./routes/v1');

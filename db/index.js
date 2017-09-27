@@ -1,4 +1,4 @@
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 const poolConfig = require('../config');
 
 if(!poolConfig){
@@ -9,3 +9,4 @@ if(!poolConfig){
 const pool = mysql.createPool(poolConfig);
 
 module.exports = pool;
+

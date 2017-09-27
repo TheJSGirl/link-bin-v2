@@ -1,6 +1,5 @@
 const registerRoutes = require('express').Router();
 const pool = require('../../db');
-const  mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 
 registerRoutes.route('/')
@@ -42,7 +41,7 @@ registerRoutes.route('/')
         email,
         password: hashedPassword
       }
-      const data = await pool.query('INSERT INTO userDetails SET ?', userData);
+      const data = await pool.query('INSERT INTO users SET ?', userData);
       console.log(data);
 
       return res.status(200).json({
