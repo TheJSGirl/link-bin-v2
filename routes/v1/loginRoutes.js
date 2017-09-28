@@ -28,7 +28,7 @@ loginRoutes.route('/')
         // const [dbEmail]  = await pool.query('SELECT * FROM userDetails WHERE email = ?', [email]);
         // console.log(dbEmail);
 
-        const [findResult] = await pool.query(`SELECT password, id FROM users WHERE email = '${email}'`);
+        const [findResult] = await pool.query(`SELECT password, id, userType FROM users WHERE email = '${email}'`);
         console.log(findResult);
 
         if(findResult.length === 0){
@@ -65,10 +65,14 @@ loginRoutes.route('/')
         // error me hai ki expiresIn jabhi use kar sakte hai jab payload ek object hoga...tmhara payload ek number h isiliye expiry set nhi hogi 
 
         // ab ho jayega
-        const userId = findResult[0].id;
+        // const userId = findResult[0].id;
+        const userData = {
+            userId: findResult[0].id,
+            userType: findResult[0].userType
+        }
 
         //generate the JWT token
-        const token = jwt.sign({userId}, 'abcdefghigkl', {expiresIn: 10});
+        const token = jwt.sign(userData, 'abcdefghigkl', {expiresIn: 60});
         console.log(token);
 
         return res.header('x-auth', token).status(200).json({
