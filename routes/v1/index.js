@@ -1,9 +1,11 @@
 const mainRoute = require('express').Router();
+const checkAuth = require('./../../middlewares');
+const registerRoute = require('./registerRoutes');
+const loginRoute   = require('./loginRoutes'); 
+const feedsRoute   = require('./feedsRoute'); 
 
-const registerRoutes= require('./registerRoutes');
-const loginRoutes   = require('./loginRoutes'); 
-
-mainRoute.use('/register', registerRoutes);
-mainRoute.use('/login', loginRoutes);
+mainRoute.use('/register', registerRoute);
+mainRoute.use('/login', loginRoute);
+mainRoute.use('/feeds', checkAuth, feedsRoute);
 
 module.exports = mainRoute;

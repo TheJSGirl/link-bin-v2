@@ -1,6 +1,7 @@
 const loginRoutes = require('express').Router();
 const pool  = require('../../db');
 const bcrypt  = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 loginRoutes.route('/')
  .post(async (req, res) => {
@@ -27,7 +28,7 @@ loginRoutes.route('/')
         // const [dbEmail]  = await pool.query('SELECT * FROM userDetails WHERE email = ?', [email]);
         // console.log(dbEmail);
 
-        const [findResult] = await pool.query(`SELECT password FROM users WHERE email = '${email}'`);
+        const [findResult] = await pool.query(`SELECT password, id FROM users WHERE email = '${email}'`);
         console.log(findResult);
 
         if(findResult.length === 0){
@@ -60,10 +61,24 @@ loginRoutes.route('/')
             });
         }
 
-        return res.status(200).json({
-            status:'successful',
-            err:'login successfully'
-        })
+        //user email from database
+        const userId = findResult[0].id;
+
+        //generate the JWT token
+        const token = jwt.sign(userId, 'abcdefghigkl');
+        console.log(token);
+
+        return res.header('x-auth', token).status(200).json({
+            status: 'ok',
+            message: 'welcome'
+        });
+
+        // return res.status(200).json({
+        //     status:'successful',
+        //     err:'login successfully'
+        // });
+
+        
         
      }
      catch(err){
