@@ -10,7 +10,7 @@ loginRoutes.route('/')
      if(!email || !password){
          return res.status(422).json({
              status: 'failed',
-             err: 'data is not provided'
+             err: 'Invalid credentials'
          });
      }
 
@@ -61,11 +61,14 @@ loginRoutes.route('/')
             });
         }
 
-        //user email from database
+        //user email from database, likha email h diya id h ? 
+        // error me hai ki expiresIn jabhi use kar sakte hai jab payload ek object hoga...tmhara payload ek number h isiliye expiry set nhi hogi 
+
+        // ab ho jayega
         const userId = findResult[0].id;
 
         //generate the JWT token
-        const token = jwt.sign(userId, 'abcdefghigkl');
+        const token = jwt.sign({userId}, 'abcdefghigkl', {expiresIn: 10});
         console.log(token);
 
         return res.header('x-auth', token).status(200).json({

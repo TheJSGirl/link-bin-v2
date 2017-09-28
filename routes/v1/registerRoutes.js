@@ -51,6 +51,13 @@ registerRoutes.route('/')
 
     }     
     catch(err){
+      console.log(err);
+      if(err.code === "ER_DUP_ENTRY"){
+        return res.status(409).json({
+          status: 'failed',
+          err: 'Email already exist'
+        })
+      }
       return res.status(500).json({
         status: 'failed',
         err: 'something went wrong'

@@ -21,6 +21,7 @@ const checkAuth = async (req, res, next) => {
         // verify the token is valid
         // check if token expired or not 
         // send 401
+        
     
 
     // finally decode the token 
@@ -33,6 +34,14 @@ const checkAuth = async (req, res, next) => {
         next();
     }
     catch(err){
+        // always log error( in case of 500
+        console.log(err); 
+        if(err.name === 'TokenExpiredError'){
+            return res.status(401).json({
+                status: 'failed',
+                err: 'Token is expired'
+            });
+        }
         return res.status(500).json({
             status: 'failed',
             err: 'something went wrong '
