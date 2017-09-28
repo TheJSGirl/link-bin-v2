@@ -3,9 +3,13 @@ const jwt = require('jsonwebtoken');
 const checkAuth = async (req, res, next) => {
     // check if req.header has x-token or not
     // if no token then respond with 401
+
+    // const token =req.body.token || req.query.token || req.headers['x-access-token'];
+
     const token = req.header('x-auth');
     console.log(req.header);
     console.log('token => ', token);
+    
     if(!token || typeof token === 'undefined'){
         return res.status(401).json({
             status: 'failed',
@@ -29,7 +33,10 @@ const checkAuth = async (req, res, next) => {
         next();
     }
     catch(err){
-        console.log(err);
+        return res.status(500).json({
+            status: 'failed',
+            err: 'something went wrong '
+        });
     }
 }
 

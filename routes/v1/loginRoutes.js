@@ -1,7 +1,7 @@
 const loginRoutes = require('express').Router();
+const jwt = require('jsonwebtoken');
 const pool  = require('../../db');
 const bcrypt  = require('bcrypt');
-const jwt = require('jsonwebtoken');
 
 loginRoutes.route('/')
  .post(async (req, res) => {
