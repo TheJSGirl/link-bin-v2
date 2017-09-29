@@ -1,11 +1,12 @@
 const mainRoute = require('express').Router();
-const checkAuth = require('./../../middlewares');
+// const checkAuth = require('./../../middlewares');
 const registerRoute = require('./registerRoutes');
-const loginRoute   = require('./loginRoutes'); 
+const loginRoute   = require('./loginRoute'); 
 const feedsRoute   = require('./feedsRoute'); 
 const adminRoute  = require('./adminRoute');
+const managerRoute = require('./managerRoute');
 
-const {isAdmin, isManager, checkAuh}  = require('../../middlewares');
+const {isAdmin, isManager, checkAuth}  = require('../../middlewares');
 
 mainRoute.use('/register', registerRoute);
 mainRoute.use('/login', loginRoute);

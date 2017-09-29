@@ -1,4 +1,5 @@
 const registerRoutes = require('express').Router();
+const {sendResponse} = require('../../helpers');
 const pool = require('../../db');
 const bcrypt = require('bcrypt');
 
@@ -11,26 +12,17 @@ registerRoutes.route('/')
     const{name, email, password} = req.body;
 
     if(!name || name.length < 5){
-      return res.status(422).json({
-        status: 'failed',
-        err: 'name is too short'
-      })
+      return sendResponse(res, [], 'failed', 'name is too short', 422);
     }
 
     //validate email
     if(!email){
-      return res.status(422).json({
-        status: 'failed',
-        err: 'email not mentioned'
-      })
+      return sendResponse(res, [], 'failed', 'email is not mentioned');
     }
 
     //validate password
     if(!password || password.length < 5){
-      return res.status(422).json({
-        status: 'failed',
-        err: 'password too small or password can not be null'
-      })
+      return sendResponse(res, [], 'failed', 'password too small or password can not be null', 422);
     }
 
     try{
@@ -44,24 +36,15 @@ registerRoutes.route('/')
       const data = await pool.query('INSERT INTO users SET ?', userData);
       console.log(data);
 
-      return res.status(200).json({
-        status: 'successful',
-        message: 'data saved successfully'
-      });
-
+      return sendResponse(res, data, 'successful', 'data saved successfully', 200);
     }     
     catch(err){
       console.log(err);
       if(err.code === "ER_DUP_ENTRY"){
-        return res.status(409).json({
-          status: 'failed',
-          err: 'Email already exist'
-        })
+        return sendResponse(res, [], 'failed', 'email already exist', 409);
       }
-      return res.status(500).json({
-        status: 'failed',
-        err: 'something went wrong'
-      });
+
+      return sendResponse(res, [], 'failed', 'something went wrong', 500);
     }
   });
 

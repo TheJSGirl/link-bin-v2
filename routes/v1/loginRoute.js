@@ -1,24 +1,19 @@
-const loginRoutes = require('express').Router();
+const loginRoute = require('express').Router();
+const {sendResponse} = require('../../helpers');
 const jwt = require('jsonwebtoken');
 const pool  = require('../../db');
 const bcrypt  = require('bcrypt');
 
-loginRoutes.route('/')
+loginRoute.route('/')
  .post(async (req, res) => {
      const{email, password} = req.body;
 
      if(!email || !password){
-         return res.status(422).json({
-             status: 'failed',
-             err: 'Invalid credentials'
-         });
+        return sendResponse(res,[], 'failed', 'invalid credentials', 422);
      }
 
      if(password.length < 5){
-         return res.status(422).json({
-             status: 'failed',
-             err: 'password is too short'
-         });
+        return sendResponse(res, [], 'failed', 'password is too short');
      }
 
      console.log(req.body);
@@ -38,10 +33,7 @@ loginRoutes.route('/')
              * then tell the user that email not registered/user not found
              */
 
-            return res.status(404).json({
-                status: 'failed',
-                err: 'email is not registered'
-            });
+            return sendResponse(res, [], 'failed', 'email is not registered', 404);
         }
 
         /**
@@ -55,16 +47,10 @@ loginRoutes.route('/')
         const isValidpassword = await bcrypt.compare(password, passwordFromDB);
 
         if(!isValidpassword){
-            return res.status(401).json({
-                status: 'failed',
-                err: ' failed to authenticate'
-            });
+            return sendResponse(res, [], 'failed', 'failed to authenticate', 401);
         }
 
-        //user email from database, likha email h diya id h ? 
-        // error me hai ki expiresIn jabhi use kar sakte hai jab payload ek object hoga...tmhara payload ek number h isiliye expiry set nhi hogi 
-
-        // ab ho jayega
+        //user email from database
         // const userId = findResult[0].id;
         const userData = {
             userId: findResult[0].id,
@@ -79,18 +65,19 @@ loginRoutes.route('/')
             status: 'ok',
             message: 'welcome'
         });
+        
+        // res.header('x-auth', token);
+        // return sendResponse(res, userData, 'ok', 'Welcome', 200);
 
         // return res.status(200).json({
         //     status:'successful',
-        //     err:'login successfully'
+        //     message:'login successfully'
         // });
-
-        
-        
-     }
+    }
      catch(err){
          console.log(err);
+         return sendResponse(res, [], 'failed', 'something went wrong', 500);
      }
  });
 
- module.exports = loginRoutes;
+ module.exports = loginRoute;

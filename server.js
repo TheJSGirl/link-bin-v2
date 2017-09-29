@@ -19,8 +19,8 @@ app.use(morgan('dev'));
 //route middleware
 app.use('/api/v1', v1Routes);
 
-app.get('/', (req, res)=> {
-  res.send('GET route');
-});
+// app.get('/', (req, res)=> {
+//   res.send('GET route');
+// });
 
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`)); // eslint-disable-line no-consol

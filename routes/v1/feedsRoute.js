@@ -1,13 +1,11 @@
 const feedsRoute = require('express').Router();
 const pool  = require('../../db');
+const {sendResponse} = require('../../helpers');
 
 
 feedsRoute.route('/')
     .get(async (req, res) => {
-        res.status(200).json({
-            status: 'success',
-            message: 'welcome to feeds'
-        });
+        return sendResponse(res, [], 'ok', 'Welcome to feeds', 200);
     });
 
 module.exports = feedsRoute;
