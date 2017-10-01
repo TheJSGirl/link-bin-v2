@@ -9,7 +9,7 @@ managerRoute.route('/')
             const [userRow] = await pool.query(`SELECT name FROM users where id = ${userId}`);
 
             if(userRow.length === 0){
-                return sendResponse(res, [], 'failed', 'user not found', 404);
+                return sendResponse(res,404, [], 'user not found');
             }
             const nameOfManager = userRow[0].name;
 
@@ -17,12 +17,12 @@ managerRoute.route('/')
             //     status: 'ok',
             //     message: `Welcom ${nameOfManager}, this is manager area`
             // });
-            return sendResponse(res, [], 'ok', `Welcom ${nameOfManager}, this is manager area`, 200);
+            return sendResponse(res,200, [],  `Welcom ${nameOfManager}, this is manager area`);
 
         }
         catch (err){
             console.log(err);
-            return sendResponse(res, [], 'failed', 'something went wrong', 500);
+            return sendResponse(res, 500, [], 'something went wrong');
         }
     })
 

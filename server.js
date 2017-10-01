@@ -1,10 +1,11 @@
-const express         = require('express');
-const bodyParser      = require('body-parser');
-const path            = require('path');
+const express = require('express');
+const bodyParser = require('body-parser');
+const path = require('path');
 const { PORT = 5050 } = process.env;
-const morgan          = require('morgan');
-const cors            = require('cors');
-const v1Routes        = require('./routes/v1');
+const morgan = require('morgan');
+const cors = require('cors');
+const v1Routes = require('./routes/v1');
+const v2Routes = require('./routes/v2');   
 
 //app initiate
 const app = express();  
@@ -18,6 +19,7 @@ app.use(morgan('dev'));
 
 //route middleware
 app.use('/api/v1', v1Routes);
+app.use('/api/v2', v2Routes);
 
 // app.get('/', (req, res)=> {
 //   res.send('GET route');

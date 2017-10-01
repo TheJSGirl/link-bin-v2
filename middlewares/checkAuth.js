@@ -25,8 +25,8 @@ const checkAuth = async (req, res, next) => {
     // const token =req.body.token || req.query.token || req.headers['x-access-token'];
 
     const token = req.header('x-auth');
-    console.log(req.header);
-    console.log('token => ', token);
+    // console.log(req.header);
+    // console.log('token => ', token);
     
     if(!token || typeof token === 'undefined'){
         return res.status(401).json({

@@ -14,7 +14,7 @@ adminRoute.route('/')
             console.log(userRow);
 
             if(userRow.length === 0){
-                return sendResponse(res, [], 'failed', 'user not found', 404); 
+                return sendResponse(res, 404, [], 'user not found'); 
             }
 
             const nameOfUser = userRow[0].name;
@@ -23,11 +23,11 @@ adminRoute.route('/')
             //     status: 'ok',
             //     message: `Welcome ${nameOfUser}, this is admin area`
             // });
-            return sendResponse(res, [], 'ok', `Welcome ${nameOfUser}, this is admin area`, 200);
+            return sendResponse(res, 200, [], `Welcome ${nameOfUser}, this is admin area`);
         }   
         catch (err){
             console.log(err);
-            return sendResponse(res, [], 'failed', 'something went wrong', 500);
+            return sendResponse(res, 500, [], 'something went wrong');
         }
     })
 

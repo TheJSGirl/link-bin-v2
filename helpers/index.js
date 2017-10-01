@@ -1,15 +1,3 @@
-module.exports = {
-    sendResponse: (res, data, status, message, code) => {
-        let errCode = code;
-        if(status === 'ok'){
-            errCode = null;
-        }
+const sendResponse = require('./sendResponse');
 
-        return res.status(code).json({
-            data,
-            status,
-            message,
-            errCode
-        });
-    }
-}
+module.exports = {sendResponse};

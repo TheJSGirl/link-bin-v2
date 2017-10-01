@@ -5,7 +5,7 @@ const {sendResponse} = require('../../helpers');
 
 feedsRoute.route('/')
     .get(async (req, res) => {
-        return sendResponse(res, [], 'ok', 'Welcome to feeds', 200);
+        return sendResponse(res, 200, [], 'Welcome to feeds');
     });
 
 module.exports = feedsRoute;
