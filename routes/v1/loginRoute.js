@@ -23,8 +23,21 @@ loginRoute.route('/')
         // const [dbEmail]  = await pool.query('SELECT * FROM userDetails WHERE email = ?', [email]);
         // console.log(dbEmail);
 
-        const [findResult] = await pool.query(`SELECT password, id, userType FROM users WHERE email = '${email}'`);
+        const [findResult] = await pool.query(`SELECT password,isActive, isBanned, id, userType FROM users WHERE email = '${email}'`);
         console.log(findResult);
+
+        const isActive = parseInt(findResult[0].isActive);
+
+        if(!isActive){
+            return sendResponse(res, 403, [], 'Your account is suspended, conact admin');
+        }
+
+        const isBanned = parseInt(findResult[0].isBanned);
+
+        if(isBanned == 1){
+            return sendResponse(res, 403, [], 'Your account is banned, contact admin');
+        }
+        
 
         if(findResult.length === 0){
             /**

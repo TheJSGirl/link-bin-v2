@@ -1,25 +1,32 @@
-const userRoute = require('express').Router();
+const userRoutes = require('express').Router();
 const pool  = require('../../db');
 const {sendResponse} = require('../../helpers');
 const bcrypt = require('bcrypt');
 
 
-userRoute.route('/')
+userRoutes.route('/')
     .get(async (req, res) => {
-        const [result]= await pool.query(`SELECT * FROM users WHERE isActive = ${1}`);
-        // console.log(result);
-        
-        // removing password field of every user 
-        result.map((item) => {
-            console.log(item);
-            delete item.password
-        });
+        try{
+            const [result]= await pool.query(`SELECT * FROM users WHERE isActive = ${1}`);
+            // console.log(result);
+            
+            // removing password field of every user 
+            result.map((item) => {
+                console.log(item);
+                delete item.password
+            });
 
-        return sendResponse(res, 200, result, 'successful');
+            return sendResponse(res, 200, result, 'successful');
+        }
+        catch(err){
+            console.log(err);
+            return sendResponse(res, 500, [], 'something went wrong');
+        }
+        
     });
 
 
-userRoute.route('/:id')
+userRoutes.route('/:id')
     .get(async (req, res) => {
         const id = req.params.id;
 
@@ -96,4 +103,4 @@ userRoute.route('/:id')
 
 
 
-module.exports = userRoute;
+module.exports = userRoutes;
