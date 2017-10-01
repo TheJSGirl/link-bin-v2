@@ -6,7 +6,7 @@ const {sendResponse} = require('../../helpers');
 linkRoutes.route('/')
     .get(async (req, res) => {
        try{
-           const [data] = await pool.query(`SELECT * FROM links`);
+           const [data] = await pool.query(`select u.name as  userName, link from users u inner join links on createdBy = u.id`);
            // console.log(data);
            return sendResponse(res, 200, data, 'successful');
         }
@@ -40,6 +40,28 @@ linkRoutes.route('/')
             console.log(err);
             return sendResponse(res, 404, [], 'not found');
 
+        }
+    })
+
+linkRoutes.route('/:id')
+    .get(async(req, res) => {
+        const onlyDigitRegex = /^\d+$/;
+
+        if(!onlyDigitRegex.test(req.params.id)){
+
+            return sendResponse(res, 422, [], 'invalid parameters');
+        }
+
+        const id = parseInt(req.params.id);        
+
+        try{
+            
+            const userLinks = await pool.query(`SELECT links.link, links.description, links.createdBy, users.name FROM links inner join users on links.id = users.id`);
+            return sendResponse(res, 200, userLinks, 'data fetched successfully');
+        }
+        catch(err){
+            console.log(err);
+            return sendResponse(res, 500, [], 'bad request');
         }
     })
 
