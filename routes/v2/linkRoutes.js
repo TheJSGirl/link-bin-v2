@@ -6,7 +6,11 @@ const {sendResponse} = require('../../helpers');
 linkRoutes.route('/')
     .get(async (req, res) => {
        try{
-           const [data] = await pool.query(`select u.name as  userName, link from users u inner join links on createdBy = u.id`);
+            const [data] = await pool.query(`SELECT 
+            u.name as  userName, ud.image, l.link , l.description, l.createdAt 
+            FROM
+            users u inner join links l ON l.createdBy = u.id 
+            inner join user_details ud ON u.id = ud.userId`);
            // console.log(data);
            return sendResponse(res, 200, data, 'successful');
         }
@@ -62,6 +66,104 @@ linkRoutes.route('/:id')
         catch(err){
             console.log(err);
             return sendResponse(res, 500, [], 'bad request');
+        }
+    })
+    
+    .patch(async (req, res) => {
+        const actionPerformerId = req.user.userId;
+        const typeOfActionPerformer = req.user.userType;
+        const linkId = parseInt(req.params.id);
+        
+        if(isNaN(linkId)){
+            return sendResponse(res, 422, [], 'invalid id');
+        }
+
+        const {link, description} = req.body;
+
+        if(!link && !description){
+            return sendResponse(res, 422, [], 'missing parameters');            
+        }
+
+        const updateValues = [];        
+
+        if(link){
+            if(!isValidLink(link)){
+                return sendResponse(res, 422, [], 'Invalid link');
+            }
+
+            updateValues.push(`link = '${link}`);
+        }
+
+        if(description){
+            if(description.length < 4){
+                return sendResponse(res, 422, [], 'Invalid link');                
+            }
+
+            updateValues.push(`description = '${description}`);            
+        }
+
+        let updateQuery = 'UPDATE links SET ';
+
+        if(updateValues.length > 0){
+            updateQuery += updateValues.join();
+        }
+
+        updateQuery += ` WHERE id = ${linkId}`;
+        
+
+        try{
+            //get user who created link
+            const [row] = await pool.query(`SELECT createdBy from links where id = ${linkId}`);
+        
+            if(row.length === 0){
+                return sendResponse(res, 404, [], 'not found');
+            }
+
+            //check type of user if its not admin then early return
+            if(typeOfActionPerformer === 1){
+                //run update query because use is admin
+                const [updated] = await pool.query(updateQuery);
+
+                return sendResponse(res, 200, [], 'data updated');
+            }
+
+            else if(actionPerformerId === row[0].createdBy){
+                //run update query
+                const [updated] = await pool.query(updateQuery);
+
+                return sendResponse(res, 200, [], 'data updated');                
+                
+            }
+
+            return sendResponse(res, 405, [], 'not allowed');
+
+        }
+        catch(err){
+            console.log(err);
+            return sendResponse(res, 500, [], 'bad request');
+        }
+    })
+
+    .delete((req, res) => {
+        const onlyDigitRegex = /^\d+$/;
+
+        if(!onlyDigitRegex.test(req.params.id)){
+            return sendResponse(res, 422, [], 'invalid parameter');
+        }
+
+        const idToBeDeleted = parseInt(req.params.id);        
+
+        console.log(req.user);
+        const idOfActionPerformer = req.user.userId;
+        const typeOfActionPerformer = req.user.userType;
+
+        try{
+            if(idOfActionPerformer === idToBeDeleted){
+            }
+        }
+        catch(err){
+            console.log(err);
+            return sendResponse(res, 403, [], 'forbidden');
         }
     })
 
