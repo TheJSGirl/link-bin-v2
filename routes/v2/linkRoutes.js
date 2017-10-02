@@ -1,7 +1,6 @@
 const linkRoutes = require('express').Router();
 const pool = require('../../db');
-const {sendResponse} = require('../../helpers');
-
+const {sendResponse, isValidLink} = require('../../helpers');
 
 linkRoutes.route('/')
     .get(async (req, res) => {

@@ -1,3 +1,4 @@
 const sendResponse = require('./sendResponse');
+const isValidLink = require ('./isValidLink');
 
-module.exports = {sendResponse};
+module.exports = {sendResponse, isValidLink};
