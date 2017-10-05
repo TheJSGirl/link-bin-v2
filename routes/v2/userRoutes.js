@@ -42,6 +42,18 @@ userRoutes.route('/:id')
     })
 
     .patch(async (req, res) => {
+
+        //validate the req
+        req.checkBody('name', 'name is required').notEmpty();
+        req.checkBody('email', 'Invalid email').notEmpty().isEmail();
+        req.checkBody('password', 'Invalid password').notEmpty().isLength({min: 5});
+
+        let errors = req.validationErrors();
+
+        if(errors){
+            return sendResponse(res, 422, [], errors[0].msg);
+        }
+        
         const {name, email, password} = req.body;
 
         const hashedPassword = await bcrypt.hash(password, 10);
