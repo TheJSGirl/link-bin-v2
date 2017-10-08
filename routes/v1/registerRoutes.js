@@ -45,7 +45,7 @@ registerRoutes.route('/')
         name,
         email,
         password: hashedPassword
-      }
+      };
       const data = await pool.query('INSERT INTO users SET ?', userData);
       // console.log(data);
 
@@ -54,7 +54,7 @@ registerRoutes.route('/')
         return sendResponse(res, 404, [], 'user not found');
       }
 
-      return sendResponse(res,200, useData, 'data saved successfully');
+      return sendResponse(res,200, userData, 'data saved successfully');
     }     
     catch(err){
       console.log(err);
