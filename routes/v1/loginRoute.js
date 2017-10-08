@@ -45,7 +45,7 @@ loginRoute.route('/')
 
         const isBanned = parseInt(findResult[0].isBanned);
 
-        if(isBanned == 1){
+        if(isBanned === 1){
             return sendResponse(res, 403, [], 'Your account is banned, contact admin');
         }
         
