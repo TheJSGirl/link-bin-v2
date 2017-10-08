@@ -12,11 +12,13 @@ registerRoutes.route('/')
     const{name, email, password} = req.body;
     
     //validation
-    req.checkBody('name', 'name chars should be more than 5 chars').exists().isLength({min:5});
-
+    req.checkBody('name', 'name chars should be more than 5 chars').notEmpty().isLength({min:5});
+    
     req.checkBody('email', 'invalid email').notEmpty().isEmail();
 
     req.checkBody('password', 'invalid credentials').notEmpty().isLength({min: 5});
+
+    let errors = req.validationErrors();
 
     if(errors){
       return sendResponse(res, 422, [], errors[0].msg);
