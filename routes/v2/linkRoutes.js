@@ -7,35 +7,92 @@ const {check, validationResult} = require('express-validator/check');
 linkRoutes.route('/')
     .get(async (req, res) => {
        try{
-            const [data] = await pool.query(` select 
+           const query = `select 
+            l.id, l.link, l.description, l.createdAt,l.createdBy,
+            ud.image, u.name
 
-                l.link, l.description, l.createdAt as linkCreationTime, 
-                u.name as linkOwner, ud.image as ownerImage,
-                c.commentedBy as commentOwnerId, ud2.image as commentOwnerImage, c.comm as commentBody,
-                u2.name as commentOwner, 
-                c.createdAt as commTime
+            from
 
-                from 
+            links l
 
-                links l left join comments c on  l.id = c.commentedOn
-                inner join users u on l.createdBy = u.id
-                inner join user_details ud on l.createdBy = ud.userId
-                left join users u2 on c.commentedBy = u2.id
-                left join user_details ud2 on c.commentedBy = ud2.userId
-                `);
-           // console.log(data);
-           const newData = _.uniqBy(data,'link');
-           for(let i = 0; i< newData.length; i++){
+            inner join user_details ud on ud.userId = l.createdBy
+            inner join users u on u.id = l.createdBy`
 
-               for(let j=0; j<data.length; j++){
-                   if(newData[i] === data[j] ){
-                        //comment object
-                   }
-               }
-           }
-           console.log(newData);
+            const [linkDetail] = await pool.query(query);
 
-           return sendResponse(res, 200, data, 'successful');
+            //fetch comments
+            const commentQuery = `select 
+            c.comm, c.commentedBy, c.createdAt, u.name,c.commentedOn,
+            ud.image
+
+            from 
+
+            comments c 
+
+            inner join  users u on c.commentedBy = u.id
+            inner join user_details ud on ud.userId = c.commentedBy`
+
+            const [commentDetail] = await pool.query(commentQuery);
+            // console.log(commentDetail);
+
+            //check isOwner or canDelete feature
+            const userId = req.user.userId; //get the id sent by token
+            let canDelete = 0;
+            let isOwner = 0;
+            
+            //check userId and link createdBy is equal if yes than toggle the values of isOwner and canDelete
+            if(userId === linkDetail[0].createdBy){
+                isOwner = 1;
+                canDelete = 1;
+            }
+
+            //add isOwner property with linkDetail 
+            linkDetail[0].isOwner = isOwner;
+            linkDetail[0].canDelete = canDelete;
+
+             
+            //fetching linkId from linkDetails for collecting comments on a link
+            let linkId = [];
+                linkDetail.forEach((item)=>{
+                    // console.log(item);
+                    linkId.push(item.id);
+                })
+
+                 
+                
+
+                //here refining no. of comments on a particular link or fetching all comments of particular link
+                for(let i=0; i< linkId.length; i++){
+                    const commentOnLink =[]; //made empty array to collect the list of comments on particular link
+
+                    for(let j=0; j< commentDetail.length; j++){
+                        const commentList = {}; //made empty object to add the comment detail of 
+                        if(userId === commentDetail[j].commentedBy){
+                            isOwner = 1;
+                            canDelete = 1;
+                            commentList.isOwner = isOwner;
+                            commentList.canDelete = canDelete;
+                        }
+                        
+                        if(linkId[i] === commentDetail[j].commentedOn){
+                            
+                            commentList.commemt = commentDetail[j].comm;
+                            commentList.commentedBy = commentDetail[j].commentedBy;
+                            commentList.name = commentDetail[j].name;
+                            commentList.image = commentDetail[j].image;                            
+                            commentList.time = commentDetail[j].createdAt;
+                           
+                            //commentOnLink.push(commentDetail[j].comm);
+                            commentOnLink.push(commentList);
+                        }                    
+                        
+                    }
+                
+                        linkDetail[i].comments = commentOnLink;                    
+                }
+                console.log(linkDetail);                
+
+           return sendResponse(res, 200,linkDetail , 'successful');
         }
        catch(err){
            console.log(err);
