@@ -2,6 +2,7 @@ const linkRoutes = require('express').Router();
 const pool = require('../../db');
 const _ = require( 'lodash');
 const {sendResponse, isValidLink} = require('../../helpers');
+const {check, validationResult} = require('express-validator/check');
 
 linkRoutes.route('/')
     .get(async (req, res) => {
@@ -44,9 +45,9 @@ linkRoutes.route('/')
     .post(async (req, res) => {
         const {link, description} = req.body;
         //validation
-        req.checkBody('link', 'Please mention the link').isEmpty();
+        req.checkBody('link', 'Please mention the link').exists();
 
-        req.checkBody('description', 'Please decribe your link').isEmpty();
+        req.checkBody('description', 'Please decribe your link').exists();
 
         let errors = req.validationErrors();
 
@@ -65,7 +66,7 @@ linkRoutes.route('/')
                 link,
                 description,
                 createdBy: id
-            }
+            };
             
             const [result] = await pool.query('INSERT INTO links SET ?',linkData);
 
@@ -79,42 +80,28 @@ linkRoutes.route('/')
         }
     })
 
-linkRoutes.route('/:id')
+linkRoutes.route('/:linkId')
     .get(async(req, res) => {
-        const onlyDigitRegex = /^\d+$/;
+        
+        const linkId = req.params.linkId;
 
-        if(!onlyDigitRegex.test(req.params.id)){
-
-            return sendResponse(res, 422, [], 'invalid parameters');
-        }
-
-        const id = parseInt(req.params.id); 
-
-        if(isNaN(id)){
-            return sendResponse(res, 422, [], 'invalid arguments');
-        }       
+        //validations
+        // checkBody('linkId', 'linkId is missing').exists();
 
         try{
             const query = `
                 select 
+                l.link, l.description, l.createdAt,l.createdBy,
+                ud.image, u.name
 
-                l.link, l.description, l.createdAt as linkCreationTime, 
-                u.name as linkOwner, ud.image as ownerImage,
-                c.commentedBy as commentOwnerId, ud2.image as commentOwnerImage, c.comm as commentBody,
-                u2.name as commentOwner, 
-                c.createdAt as commTime
+                from
 
-                from 
+                links l
 
-                links l left join comments c on  l.id = c.commentedOn
-                inner join users u on l.createdBy = u.id
-                inner join user_details ud on l.createdBy = ud.userId
-                left join users u2 on c.commentedBy = u2.id
-                left join user_details ud2 on c.commentedBy = ud2.userId
+                inner join user_details ud on ud.userId = l.createdBy
+                inner join users u on u.id = l.createdBy 
 
-
-
-                where l.id = ${id}
+                where l.id = ${linkId}
             `;
             
             const [linkDetail] = await pool.query(query);
@@ -123,39 +110,56 @@ linkRoutes.route('/:id')
                 return sendResponse(res, 404, [], 'Data not found');
             }
 
-            /**
-             * refine the data from DB or proper response 
-             */
-            const commentArr = [];
+            console.log(linkDetail);
 
-            linkDetail.map((item) => {
-                const commentObj = {};
-                if(item.commentOwnerId){
-                    commentObj.userId = item.commentOwnerId;
-                    commentObj.userName = item.commentOwner;                
-                    commentObj.userImage = item.commentOwnerImage;
-                    commentObj.comment = item.commentBody;
-                    commentObj.time = item.commTime;               
-
-                    // push the commentobjectinto coment array
-                    commentArr.push(commentObj);
-                }
-            });
-
-            const responseData = {
-                linkId: id,
-                link: linkDetail[0].link,
-                description: linkDetail[0].description,
-                creationTime: linkDetail[0].linkCreationTime,
-                userName:linkDetail[0].linkOwner,
-                userImage: linkDetail[0].ownerImage,
-                comments: commentArr
+            const userId = req.user.userId;
+            
+            let isOwner = 0;
+            let canDelete = 0;
+            
+            if(userId === linkDetail[0].createdBy){
+                isOwner = 1;
+                canDelete =1;
             }
 
-            return sendResponse(res, 200, responseData, 'data fetched successfully');
+            delete linkDetail[0].createdBy;
+
+            linkDetail[0].isOwner = isOwner;            
+
+            const commentQuery = `
+                select 
+
+                c.comm, c.commentedBy, c.createdAt, u.name,
+                ud.image
+
+                from 
+
+                comments c 
+
+                inner join  users u on c.commentedBy = u.id
+                inner join user_details ud on ud.userId = c.commentedBy
+
+                where c.commentedOn = ${linkId}`
+
+            const [commentDetail] = await pool.query(commentQuery);
+            
+            commentDetail.forEach((comment) => {
+                let commentOwner = 0;
+                if(comment.commentedBy === userId){
+                    commentOwner = 1;
+                }
+                comment.canDelete = canDelete;
+                comment.commentOwner = commentOwner;  
+                delete comment.commentedBy;              
+            });
+
+            // add comments to the link object 
+            linkDetail[0].comments = commentDetail;
+
+            return sendResponse(res, 200, linkDetail[0], 'data fetched successfully');
         }
         catch(err){
-            console.log(err);
+            console.error(err);
             return sendResponse(res, 500, [], 'bad request');
         }
     })
