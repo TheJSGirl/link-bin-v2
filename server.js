@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const cors = require('cors');
 const v1Routes = require('./routes/v1');
 const v2Routes = require('./routes/v2');
+const expressValidator = require('express-validator');
 
    
 
