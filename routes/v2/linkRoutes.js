@@ -1,17 +1,98 @@
 const linkRoutes = require('express').Router();
 const pool = require('../../db');
+const _ = require( 'lodash');
 const {sendResponse, isValidLink} = require('../../helpers');
+const {check, validationResult} = require('express-validator/check');
 
 linkRoutes.route('/')
     .get(async (req, res) => {
        try{
-            const [data] = await pool.query(`SELECT 
-            u.name as  userName, ud.image, l.link , l.description, l.createdAt 
-            FROM
-            users u inner join links l ON l.createdBy = u.id 
-            inner join user_details ud ON u.id = ud.userId`);
-           // console.log(data);
-           return sendResponse(res, 200, data, 'successful');
+           const query = `select 
+            l.id, l.link, l.description, l.createdAt,l.createdBy,
+            ud.image, u.name
+
+            from
+
+            links l
+
+            inner join user_details ud on ud.userId = l.createdBy
+            inner join users u on u.id = l.createdBy`
+
+            const [linkDetail] = await pool.query(query);
+
+            //fetch comments
+            const commentQuery = `select 
+            c.comm, c.commentedBy, c.createdAt, u.name,c.commentedOn,
+            ud.image
+
+            from 
+
+            comments c 
+
+            inner join  users u on c.commentedBy = u.id
+            inner join user_details ud on ud.userId = c.commentedBy`
+
+            const [commentDetail] = await pool.query(commentQuery);
+            // console.log(commentDetail);
+
+            //check isOwner or canDelete feature
+            const userId = req.user.userId; //get the id sent by token
+            let canDelete = 0;
+            let isOwner = 0;
+            
+            //check userId and link createdBy is equal if yes than toggle the values of isOwner and canDelete
+            if(userId === linkDetail[0].createdBy){
+                isOwner = 1;
+                canDelete = 1;
+            }
+
+            //add isOwner property with linkDetail 
+            linkDetail[0].isOwner = isOwner;
+            linkDetail[0].canDelete = canDelete;
+
+             
+            //fetching linkId from linkDetails for collecting comments on a link
+            let linkId = [];
+                linkDetail.forEach((item)=>{
+                    // console.log(item);
+                    linkId.push(item.id);
+                })
+
+                 
+                
+
+                //here refining no. of comments on a particular link or fetching all comments of particular link
+                for(let i=0; i< linkId.length; i++){
+                    const commentOnLink =[]; //made empty array to collect the list of comments on particular link
+
+                    for(let j=0; j< commentDetail.length; j++){
+                        const commentList = {}; //made empty object to add the comment detail of 
+                        if(userId === commentDetail[j].commentedBy){
+                            isOwner = 1;
+                            canDelete = 1;
+                            commentList.isOwner = isOwner;
+                            commentList.canDelete = canDelete;
+                        }
+                        
+                        if(linkId[i] === commentDetail[j].commentedOn){
+                            
+                            commentList.commemt = commentDetail[j].comm;
+                            commentList.commentedBy = commentDetail[j].commentedBy;
+                            commentList.name = commentDetail[j].name;
+                            commentList.image = commentDetail[j].image;                            
+                            commentList.time = commentDetail[j].createdAt;
+                           
+                            //commentOnLink.push(commentDetail[j].comm);
+                            commentOnLink.push(commentList);
+                        }                    
+                        
+                    }
+                
+                        linkDetail[i].comments = commentOnLink;                    
+                }
+                console.log(linkDetail);                
+
+           return sendResponse(res, 200,linkDetail , 'successful');
         }
        catch(err){
            console.log(err);
@@ -20,10 +101,20 @@ linkRoutes.route('/')
     })
     .post(async (req, res) => {
         const {link, description} = req.body;
-        if(!link || !description){
+        //validation
+        req.checkBody('link', 'Please mention the link').exists();
 
-            return sendResponse(res, 400, [], 'fields not provided');
+        req.checkBody('description', 'Please decribe your link').exists();
+
+        let errors = req.validationErrors();
+
+        if(errors){
+            return sendResponse(res, 422, [], errors[0].msg);
         }
+        // if(!link || !description){
+
+        //     return sendResponse(res, 400, [], 'fields not provided');
+        // }
 
         const id = req.user.userId;
 
@@ -32,7 +123,7 @@ linkRoutes.route('/')
                 link,
                 description,
                 createdBy: id
-            }
+            };
             
             const [result] = await pool.query('INSERT INTO links SET ?',linkData);
 
@@ -46,42 +137,28 @@ linkRoutes.route('/')
         }
     })
 
-linkRoutes.route('/:id')
+linkRoutes.route('/:linkId')
     .get(async(req, res) => {
-        const onlyDigitRegex = /^\d+$/;
+        
+        const linkId = req.params.linkId;
 
-        if(!onlyDigitRegex.test(req.params.id)){
-
-            return sendResponse(res, 422, [], 'invalid parameters');
-        }
-
-        const id = parseInt(req.params.id); 
-
-        if(isNaN(id)){
-            return sendResponse(res, 422, [], 'invalid arguments');
-        }       
+        //validations
+        // checkBody('linkId', 'linkId is missing').exists();
 
         try{
             const query = `
                 select 
+                l.link, l.description, l.createdAt,l.createdBy,
+                ud.image, u.name
 
-                l.link, l.description, l.createdAt as linkCreationTime, 
-                u.name as linkOwner, ud.image as ownerImage,
-                c.commentedBy as commentOwnerId, ud2.image as commentOwnerImage, c.comm as commentBody,
-                u2.name as commentOwner, 
-                c.createdAt as commTime
+                from
 
-                from 
+                links l
 
-                links l left join comments c on  l.id = c.commentedOn
-                inner join users u on l.createdBy = u.id
-                inner join user_details ud on l.createdBy = ud.userId
-                left join users u2 on c.commentedBy = u2.id
-                left join user_details ud2 on c.commentedBy = ud2.userId
+                inner join user_details ud on ud.userId = l.createdBy
+                inner join users u on u.id = l.createdBy 
 
-
-
-                where l.id = ${id}
+                where l.id = ${linkId}
             `;
             
             const [linkDetail] = await pool.query(query);
@@ -90,39 +167,56 @@ linkRoutes.route('/:id')
                 return sendResponse(res, 404, [], 'Data not found');
             }
 
-            /**
-             * refine the data from DB or proper response 
-             */
-            const commentArr = [];
+            console.log(linkDetail);
 
-            linkDetail.map((item) => {
-                const commentObj = {};
-                if(item.commentOwnerId){
-                    commentObj.userId = item.commentOwnerId;
-                    commentObj.userName = item.commentOwner;                
-                    commentObj.userImage = item.commentOwnerImage;
-                    commentObj.comment = item.commentBody;
-                    commentObj.time = item.commTime;               
-
-                    // push the commentobjectinto coment array
-                    commentArr.push(commentObj);
-                }
-            });
-
-            const responseData = {
-                linkId: id,
-                link: linkDetail[0].link,
-                description: linkDetail[0].description,
-                creationTime: linkDetail[0].linkCreationTime,
-                userName:linkDetail[0].linkOwner,
-                userImage: linkDetail[0].ownerImage,
-                comments: commentArr
+            const userId = req.user.userId;
+            
+            let isOwner = 0;
+            let canDelete = 0;
+            
+            if(userId === linkDetail[0].createdBy){
+                isOwner = 1;
+                canDelete =1;
             }
 
-            return sendResponse(res, 200, responseData, 'data fetched successfully');
+            delete linkDetail[0].createdBy;
+
+            linkDetail[0].isOwner = isOwner;            
+
+            const commentQuery = `
+                select 
+
+                c.comm, c.commentedBy, c.createdAt, u.name,
+                ud.image
+
+                from 
+
+                comments c 
+
+                inner join  users u on c.commentedBy = u.id
+                inner join user_details ud on ud.userId = c.commentedBy
+
+                where c.commentedOn = ${linkId}`
+
+            const [commentDetail] = await pool.query(commentQuery);
+            
+            commentDetail.forEach((comment) => {
+                let commentOwner = 0;
+                if(comment.commentedBy === userId){
+                    commentOwner = 1;
+                }
+                comment.canDelete = canDelete;
+                comment.commentOwner = commentOwner;  
+                delete comment.commentedBy;              
+            });
+
+            // add comments to the link object 
+            linkDetail[0].comments = commentDetail;
+
+            return sendResponse(res, 200, linkDetail[0], 'data fetched successfully');
         }
         catch(err){
-            console.log(err);
+            console.error(err);
             return sendResponse(res, 500, [], 'bad request');
         }
     })
@@ -172,13 +266,13 @@ linkRoutes.route('/:id')
 
         try{
             //get user who created link
-            const [row] = await pool.query(`SELECT createdBy from links where id = ${linkId}`);
+            const [row] = await pool.query(`SELECT createdBy FROM links WHERE id = ${linkId}`);
         
             if(row.length === 0){
                 return sendResponse(res, 404, [], 'not found');
             }
 
-            //check type of user if its not admin then early return
+            //check type of user if its admin then update 
             if(typeOfActionPerformer === 1){
                 //run update query because use is admin
                 const [updated] = await pool.query(updateQuery);
@@ -203,7 +297,7 @@ linkRoutes.route('/:id')
         }
     })
 
-    .delete((req, res) => {
+    .delete(async (req, res) => {
         const onlyDigitRegex = /^\d+$/;
 
         if(!onlyDigitRegex.test(req.params.id)){
@@ -217,8 +311,28 @@ linkRoutes.route('/:id')
         const typeOfActionPerformer = req.user.userType;
 
         try{
-            if(idOfActionPerformer === idToBeDeleted){
+
+            [row] = await pool.query(`SELECT createdBy FROM links WHERE id = '${idToBeDeleted}`);
+            
+            //validate data from db
+            if(row.length === 0){
+                
+                return sendResponse(res, 404, [], 'not found');
             }
+
+            //check typeOfAction performer is admin
+            if(typeOfActionPerformer == 1){
+                const [deletedData] = await pool.query(`DELETE FROM links WHERE id = '${idToBeDeleted}'`);
+                console.log(deletedData);
+
+            }
+
+            //check idOfActionPerformer is the owner of link if yes than it can be delete
+           if(idOfActionPerformer === row.createdBy){
+            const [deletedData] = await pool.query(`DELETE FROM links WHERE id = '${idToBeDeleted}'`);
+                console.log(deletedData);
+            
+           }
         }
         catch(err){
             console.log(err);

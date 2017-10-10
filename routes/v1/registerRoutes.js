@@ -10,20 +10,33 @@ registerRoutes.route('/')
   })
   .post( async (req, res) => {
     const{name, email, password} = req.body;
+    
+    //validation
+    req.checkBody('name', 'name chars should be more than 5 chars').notEmpty().isLength({min:5});
+    
+    req.checkBody('email', 'invalid email').notEmpty().isEmail();
 
-    if(!name || name.length < 5){
-      return sendResponse(res, 422, [], 'name is too short');
+    req.checkBody('password', 'invalid credentials').notEmpty().isLength({min: 5});
+
+    let errors = req.validationErrors();
+
+    if(errors){
+      return sendResponse(res, 422, [], errors[0].msg);
     }
+
+    // if(!name || name.length < 5){
+    //   return sendResponse(res, 422, [], 'name is too short');
+    // }
 
     //validate email
-    if(!email){
-      return sendResponse(res, 400, [], 'email is not mentioned');
-    }
+    // if(!email){
+    //   return sendResponse(res, 400, [], 'email is not mentioned');
+    // }
 
     //validate password
-    if(!password || password.length < 5){
-      return sendResponse(res, 422, [], 'password too small or password can not be null');
-    }
+    // if(!password || password.length < 5){
+    //   return sendResponse(res, 422, [], 'password too small or password can not be null');
+    // }
 
     try{
       
@@ -32,7 +45,7 @@ registerRoutes.route('/')
         name,
         email,
         password: hashedPassword
-      }
+      };
       const data = await pool.query('INSERT INTO users SET ?', userData);
       // console.log(data);
 
@@ -41,10 +54,10 @@ registerRoutes.route('/')
         return sendResponse(res, 404, [], 'user not found');
       }
 
-      return sendResponse(res,200, useData, 'data saved successfully');
+      return sendResponse(res,200, userData, 'data saved successfully');
     }     
     catch(err){
-      console.log(err);
+      console.error(err);
       if(err.code === "ER_DUP_ENTRY"){
         return sendResponse(res, 409, [], 'email already exist');
       }

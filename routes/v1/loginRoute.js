@@ -6,17 +6,28 @@ const bcrypt  = require('bcrypt');
 
 loginRoute.route('/')
  .post(async (req, res) => {
+
+     //validating email password
+     req.checkBody('email', 'invalid email').exists().isEmail();
+     req.checkBody('password', 'invalid credentials').exists().isLength({min: 5});
+
+     let errors = req.validationErrors();
+
+     if(errors){
+         return sendResponse(res, 422, [], errors[0].msg);
+     }
+     
      const{email, password} = req.body;
 
-     if(!email || !password){
-        return sendResponse(res, 422, [],'invalid credentials');
-     }
+    //  if(!email || !password){
+    //     return sendResponse(res, 422, [],'invalid credentials');
+    //  }
 
-     if(password.length < 5){
-        return sendResponse(res, 400, [], 'password is too short');
-     }
+    //  if(password.length < 5){
+    //     return sendResponse(res, 400, [], 'password is too short');
+    //  }
 
-     console.log(req.body);
+    //  console.log(req.body);
 
      try{
         
@@ -26,15 +37,19 @@ loginRoute.route('/')
         const [findResult] = await pool.query(`SELECT password,isActive, isBanned, id, userType FROM users WHERE email = '${email}'`);
         console.log(findResult);
 
+        if(!findResult.length){
+            return sendResponse(res, 404, [], 'user not found');
+        }
+
         const isActive = parseInt(findResult[0].isActive);
 
         if(!isActive){
-            return sendResponse(res, 403, [], 'Your account is suspended, conact admin');
+            return sendResponse(res, 403, [], 'Your account is suspended, contact admin');
         }
 
         const isBanned = parseInt(findResult[0].isBanned);
 
-        if(isBanned == 1){
+        if(isBanned === 1){
             return sendResponse(res, 403, [], 'Your account is banned, contact admin');
         }
         
