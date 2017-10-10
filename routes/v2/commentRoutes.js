@@ -1,6 +1,8 @@
 const commentRoutes = require('express').Router();
 const pool = require('../../db');
 const {sendResponse} = require('../../helpers');
+const expressValidator = require('express-validator');
+
 
 commentRoutes.route('/:linkId/comments')
     .get(async(req, res) => {

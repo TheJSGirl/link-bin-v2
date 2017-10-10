@@ -6,15 +6,17 @@ const morgan = require('morgan');
 const cors = require('cors');
 const v1Routes = require('./routes/v1');
 const v2Routes = require('./routes/v2');
-const expressValidator = require('express-validator');
+
    
 
 //app initiate
 const app = express();  
 
+
 //view setup
 
 // middlewares
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(expressValidator());

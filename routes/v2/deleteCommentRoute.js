@@ -1,6 +1,8 @@
 const deleteCommentRoute = require('express').Router();
 const pool = require('../../db');
 const {sendResponse} = require('../../helpers');
+const expressValidator = require('express-validator');
+
 
 deleteCommentRoute.route('/:commentId')
 
@@ -8,6 +10,9 @@ deleteCommentRoute.route('/:commentId')
         const actionUser = req.user.userId;
         const typeOfUser = req.user.userType;
         const idToBeDeleted = req.params.commentId;
+
+        //validation
+        req.checkBody('idToBeDeleted', 'id is require').exists();
 
         console.log('req.user => ', req.user);
 
