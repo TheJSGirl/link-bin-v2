@@ -57,7 +57,7 @@ registerRoutes.route('/')
       return sendResponse(res,200, userData, 'data saved successfully');
     }     
     catch(err){
-      console.log(err);
+      console.error(err);
       if(err.code === "ER_DUP_ENTRY"){
         return sendResponse(res, 409, [], 'email already exist');
       }

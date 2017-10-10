@@ -37,6 +37,10 @@ loginRoute.route('/')
         const [findResult] = await pool.query(`SELECT password,isActive, isBanned, id, userType FROM users WHERE email = '${email}'`);
         console.log(findResult);
 
+        if(!findResult.length){
+            return sendResponse(res, 404, [], 'user not found');
+        }
+
         const isActive = parseInt(findResult[0].isActive);
 
         if(!isActive){
