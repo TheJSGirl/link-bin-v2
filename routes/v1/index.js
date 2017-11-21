@@ -1,5 +1,4 @@
 const mainRoute = require('express').Router();
-// const checkAuth = require('./../../middlewares');
 const registerRoute = require('./registerRoutes');
 const loginRoute   = require('./loginRoute'); 
 const feedsRoute   = require('./feedsRoute'); 

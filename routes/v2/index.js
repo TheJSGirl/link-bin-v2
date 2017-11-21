@@ -7,6 +7,7 @@ const deleteCommentRoute = require('./deleteCommentRoute');
 
 mainRoute.use('/users', checkAuth, userRoutes); 
 mainRoute.use('/links', checkAuth,linkRoutes);
-mainRoute.use('/links', checkAuth, commentRoutes);
-mainRoute.use('/comments', checkAuth, deleteCommentRoute );
+mainRoute.use('/links', checkAuth, isAdmin, commentRoutes);
+mainRoute.use('/comments', checkAuth, isAdmin, deleteCommentRoute );
+
 module.exports = mainRoute;

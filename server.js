@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
-const { PORT = 5050 } = process.env;
+const PORT = 5050 || process.env.PORT ;
 const morgan = require('morgan');
 const cors = require('cors');
 const v1Routes = require('./routes/v1');
@@ -28,7 +28,7 @@ app.use(morgan('dev'));
 
 //home route
 app.get('/', (req, res) => {
-    return res.sendFile(staticFilePath);
+	return res.sendFile(staticFilePath);
 });
 
 //route middleware

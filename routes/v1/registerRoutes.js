@@ -3,20 +3,18 @@ const {sendResponse} = require('../../helpers');
 const pool = require('../../db');
 const bcrypt = require('bcrypt');
 
-registerRoutes.route('/')
-  .get((req, res) => {
-    
-    return res.send('Home Page');
+registerRoutes.route('/').get((req, res) => {
+  return res.send('Home Page');
   })
   .post( async (req, res) => {
     const{name, email, password} = req.body;
     
     //validation
-    req.checkBody('name', 'name chars should be more than 5 chars').notEmpty().isLength({min:5});
+    req.checkBody('name', 'name chars should be more than 5 chars').exists().isLength({min:5});
     
-    req.checkBody('email', 'invalid email').notEmpty().isEmail();
+    req.checkBody('email', 'invalid email').exists().isEmail();
 
-    req.checkBody('password', 'invalid credentials').notEmpty().isLength({min: 5});
+    req.checkBody('password', 'invalid credentials').exists().isLength({min: 5});
 
     let errors = req.validationErrors();
 
@@ -39,7 +37,6 @@ registerRoutes.route('/')
     // }
 
     try{
-      
       const hashedPassword = await bcrypt.hash(password, 10);
       const userData = {
         name,
