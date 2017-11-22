@@ -1,5 +1,5 @@
 const mainRoute = require('express').Router();
-const {checkAuth, isAdmin} = require('../../middlewares');
+const { checkAuth, isAdmin } = require('../../middlewares');
 const userRoutes = require('./userRoutes');
 const linkRoutes = require('./linkRoutes');
 const commentRoutes = require('./commentRoutes');

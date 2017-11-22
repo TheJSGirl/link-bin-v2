@@ -39,13 +39,13 @@ loginRoute.route('/')
         return sendResponse(res, 404, [], 'user not found');
       }
 
-      const isActive = parseInt(findResult[0].isActive);
+      const isActive = parseInt(findResult[0].isActive, 10);
 
       if (!isActive) {
         return sendResponse(res, 403, [], 'Your account is suspended, contact admin');
       }
 
-      const isBanned = parseInt(findResult[0].isBanned);
+      const isBanned = parseInt(findResult[0].isBanned, 10);
 
       if (isBanned === 1) {
         return sendResponse(res, 403, [], 'Your account is banned, contact admin');
