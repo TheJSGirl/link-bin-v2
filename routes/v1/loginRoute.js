@@ -1,23 +1,22 @@
 const loginRoute = require('express').Router();
-const {sendResponse} = require('../../helpers');
+const { sendResponse } = require('../../helpers');
 const jwt = require('jsonwebtoken');
-const pool  = require('../../db');
-const bcrypt  = require('bcrypt');
+const pool = require('../../db');
+const bcrypt = require('bcrypt');
 
 loginRoute.route('/')
- .post(async (req, res) => {
+  .post(async (req, res) => {
+    // validating email password
+    req.checkBody('email', 'invalid email').exists().isEmail();
+    req.checkBody('password', 'invalid credentials').exists().isLength({ min: 5 });
 
-     //validating email password
-     req.checkBody('email', 'invalid email').exists().isEmail();
-     req.checkBody('password', 'invalid credentials').exists().isLength({min: 5});
+    const errors = req.validationErrors();
 
-     let errors = req.validationErrors();
+    if (errors) {
+      return sendResponse(res, 422, [], errors[0].msg);
+    }
 
-     if(errors){
-         return sendResponse(res, 422, [], errors[0].msg);
-     }
-     
-     const{email, password} = req.body;
+    const { email, password } = req.body;
 
     //  if(!email || !password){
     //     return sendResponse(res, 422, [],'invalid credentials');
@@ -29,83 +28,81 @@ loginRoute.route('/')
 
     //  console.log(req.body);
 
-     try{
-        
-        // const [dbEmail]  = await pool.query('SELECT * FROM userDetails WHERE email = ?', [email]);
-        // console.log(dbEmail);
+    try {
+      // const [dbEmail]  = await pool.query('SELECT * FROM userDetails WHERE email = ?', [email]);
+      // console.log(dbEmail);
 
-        const [findResult] = await pool.query(`SELECT password,isActive, isBanned, id, userType FROM users WHERE email = '${email}'`);
-        console.log(findResult);
+      const [findResult] = await pool.query(`SELECT password,isActive, isBanned, id, userType FROM users WHERE email = '${email}'`);
+      console.log(findResult);
 
-        if(!findResult.length){
-            return sendResponse(res, 404, [], 'user not found');
-        }
+      if (!findResult.length) {
+        return sendResponse(res, 404, [], 'user not found');
+      }
 
-        const isActive = parseInt(findResult[0].isActive);
+      const isActive = parseInt(findResult[0].isActive);
 
-        if(!isActive){
-            return sendResponse(res, 403, [], 'Your account is suspended, contact admin');
-        }
+      if (!isActive) {
+        return sendResponse(res, 403, [], 'Your account is suspended, contact admin');
+      }
 
-        const isBanned = parseInt(findResult[0].isBanned);
+      const isBanned = parseInt(findResult[0].isBanned);
 
-        if(isBanned === 1){
-            return sendResponse(res, 403, [], 'Your account is banned, contact admin');
-        }
-        
+      if (isBanned === 1) {
+        return sendResponse(res, 403, [], 'Your account is banned, contact admin');
+      }
 
-        if(findResult.length === 0){
-            /**
-             * if the email is not registered,  
+
+      if (findResult.length === 0) {
+        /**
+             * if the email is not registered,
              * db will give empty result
              * then tell the user that email not registered/user not found
              */
 
-            return sendResponse(res,404, [], 'email is not registered');
-        }
+        return sendResponse(res, 404, [], 'email is not registered');
+      }
 
-        /**
-         * if database return a row (inside findResult), that means 
+      /**
+         * if database return a row (inside findResult), that means
          * user is registered, and the database has fetched his password
-         * now compare the pass from DB with the pass in req.body 
+         * now compare the pass from DB with the pass in req.body
          */
 
-        
-        const passwordFromDB = findResult[0].password;
-        const isValidpassword = await bcrypt.compare(password, passwordFromDB);
 
-        if(!isValidpassword){
-            return sendResponse(res,401,  [], 'failed to authenticate');
-        }
+      const passwordFromDB = findResult[0].password;
+      const isValidpassword = await bcrypt.compare(password, passwordFromDB);
 
-        //user email from database
-        // const userId = findResult[0].id;
-        const userData = {
-            userId: findResult[0].id,
-            userType: findResult[0].userType
-        }
+      if (!isValidpassword) {
+        return sendResponse(res, 401, [], 'failed to authenticate');
+      }
 
-        //generate the JWT token
-        const token = jwt.sign(userData, 'abcdefghigkl', {expiresIn: 60 * 60});
-        console.log(token);
+      // user email from database
+      // const userId = findResult[0].id;
+      const userData = {
+        userId: findResult[0].id,
+        userType: findResult[0].userType,
+      };
 
-        return res.header('x-auth', token).status(200).json({
-            status: 'ok',
-            message: 'welcome'
-        });
-        
-        // res.header('x-auth', token);
-        // return sendResponse(res, userData, 'ok', 'Welcome', 200);
+      // generate the JWT token
+      const token = jwt.sign(userData, 'abcdefghigkl', { expiresIn: 60 * 60 });
+      console.log(token);
 
-        // return res.status(200).json({
-        //     status:'successful',
-        //     message:'login successfully'
-        // });
+      return res.header('x-auth', token).status(200).json({
+        status: 'ok',
+        message: 'welcome',
+      });
+
+      // res.header('x-auth', token);
+      // return sendResponse(res, userData, 'ok', 'Welcome', 200);
+
+      // return res.status(200).json({
+      //     status:'successful',
+      //     message:'login successfully'
+      // });
+    } catch (err) {
+      console.log(err);
+      return sendResponse(res, 500, [], 'something went wrong');
     }
-     catch(err){
-         console.log(err);
-         return sendResponse(res, 500, [], 'something went wrong');
-     }
- });
+  });
 
- module.exports = loginRoute;
+module.exports = loginRoute;
