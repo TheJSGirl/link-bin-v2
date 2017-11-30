@@ -41,15 +41,9 @@ registerRoutes.route('/').get((req, res) => res.send('Home Page'))
         email,
         password: hashedPassword,
       };
-      const data = await pool.query('INSERT INTO users SET ?', userData);
-      // console.log(data);
+      await pool.query('INSERT INTO users SET ?', userData);
 
-      // handle empty data
-      if (data.length === 0) {
-        return sendResponse(res, 404, [], 'user not found');
-      }
-
-      return sendResponse(res, 200, userData, 'data saved successfully');
+      return sendResponse(res, 200, [], 'register successfully');
     }
     catch (err) {
       console.error(err);
