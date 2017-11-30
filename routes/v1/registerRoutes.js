@@ -43,7 +43,7 @@ registerRoutes.route('/').get((req, res) => res.send('Home Page'))
       };
       await pool.query('INSERT INTO users SET ?', userData);
 
-      return sendResponse(res, 200, [], 'register successfully');
+      return sendResponse(res, 200, [], 'Registration successful, please go to /login ');
     }
     catch (err) {
       console.error(err);
