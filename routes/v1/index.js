@@ -11,5 +11,5 @@ mainRoute.use('/register', registerRoute);
 mainRoute.use('/login', loginRoute);
 mainRoute.use('/feeds', checkAuth, feedsRoute);
 mainRoute.use('/admin', checkAuth, isAdmin, adminRoute);
-mainRoute.use('/manager',checkAuth,isManager, managerRoute);
+mainRoute.use('/manager', checkAuth, isManager, managerRoute);
 module.exports = mainRoute;
