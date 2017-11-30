@@ -85,20 +85,13 @@ loginRoute.route('/')
 
       // generate the JWT token
       const token = jwt.sign(userData, 'abcdefghigkl', { expiresIn: 60 * 60 });
-      console.log(token);
+      // console.log(token);
 
-      return res.header('x-auth', token).status(200).json({
-        status: 'ok',
-        message: 'welcome',
-      });
-
+      // set token in response header
+      res.header('x-auth', token);
+      return sendResponse(res, 200, { token }, 'Login successful');
       // res.header('x-auth', token);
       // return sendResponse(res, userData, 'ok', 'Welcome', 200);
-
-      // return res.status(200).json({
-      //     status:'successful',
-      //     message:'login successfully'
-      // });
     } catch (err) {
       console.log(err);
       return sendResponse(res, 500, [], 'something went wrong');
